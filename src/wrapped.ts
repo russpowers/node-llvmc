@@ -34,8 +34,16 @@ export abstract class Ref {
  * An LLVM wrapper object that has a `free` method that you must call when
  * you're done with the memory.
  */
-export interface Freeable {
-    free(): void;
+export abstract class Freeable extends Ref {
+    constructor(ref: any) {
+        super(ref);
+
+        finalize(this, function (this: Freeable) {
+            this.free();
+        });
+    }
+
+    abstract free(): void;
 }
 
 //////////////////////////////////////////////////////////
@@ -84,18 +92,10 @@ export class Context extends Ref {
 /**
  * Represents an LLVM module: specifically, and underlying `LLVMModuleRef`.
  */
-export class Module extends Ref implements Freeable {
+export class Module extends Freeable {
     static create(name: String, ctx?: Context): Module {
         let modref = ctx ? LLVM.LLVMModuleCreateWithNameInContext(name, ctx.ref) : LLVM.LLVMModuleCreateWithName(name);
         return new Module(modref);
-    }
-
-    private constructor(ref: any) {
-        super(ref);
-
-        finalize(this, function (this: Module) {
-            this.free();
-        });
     }
 
     /**
@@ -577,16 +577,10 @@ export class BasicBlock extends Ref {
 /**
  * Represents an LLVM IR builder.
  */
-export class Builder extends Ref implements Freeable {
+export class Builder extends Freeable {
     static create(ctx?: Context): Builder {
         let bref = ctx ? LLVM.LLVMCreateBuilderInContext(ctx.ref) : LLVM.LLVMCreateBuilder();
-        const builder = new Builder(bref);
-
-        finalize(builder, function (this: Builder) {
-            builder.free();
-        });
-
-        return builder;
+        return new Builder(bref);
     }
 
     /**
@@ -882,15 +876,7 @@ export class PassRegistry extends Ref {
 /**
  * Wraps an LLVMPassManagerRef.
  */
-export class PassManager extends Ref implements Freeable {
-    constructor(ref: any) {
-        super(ref);
-
-        finalize(this, function (this: PassManager) {
-            this.free();
-        });
-    }
-
+export class PassManager extends Freeable {
     /**
      * Free the memory for this pass manager.
      */
@@ -1160,7 +1146,7 @@ export class Target extends Ref {
 /**
  * Wraps an LLVMExecutionEngineRef.
  */
-export class ExecutionEngine extends Ref implements Freeable {
+export class ExecutionEngine extends Freeable {
     static create(mod: Module): ExecutionEngine {
         const error_ptr = ref.alloc('string');
         const ee_ptr = ref.alloc(voidp);
@@ -1194,14 +1180,6 @@ export class ExecutionEngine extends Ref implements Freeable {
         return new ExecutionEngine(ref.deref(ee_ptr));
     }
 
-    private constructor(ref: any) {
-        super(ref);
-
-        finalize(this, function (this: ExecutionEngine) {
-            this.free();
-        });
-    }
-
     /**
      * Free the memory for this execution engine.
      */
@@ -1218,7 +1196,7 @@ export class ExecutionEngine extends Ref implements Freeable {
 /**
  * Wraps an LLVMGenericValueRef.
  */
-export class GenericValue extends Ref implements Freeable {
+export class GenericValue extends Freeable {
     static createInt(type: Type, val: number, isSigned: boolean = true): GenericValue {
         const vref = LLVM.LLVMCreateGenericValueOfInt(type.ref, val, isSigned);
         return new GenericValue(vref);
@@ -1227,14 +1205,6 @@ export class GenericValue extends Ref implements Freeable {
     static createFloat(type: Type, val: number): GenericValue {
         const vref = LLVM.LLVMCreateGenericValueOfFloat(type.ref, val);
         return new GenericValue(vref);
-    }
-
-    constructor(ref: any) {
-        super(ref);
-
-        finalize(this, function (this: GenericValue) {
-            this.free();
-        });
     }
 
     /**
