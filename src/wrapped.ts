@@ -162,6 +162,17 @@ export class Module extends Ref implements Freeable {
 
         return func;
     }
+
+    /**
+     * Iterate over the functions in the module.
+     */
+    *functions() {
+        let fref = LLVM.LLVMGetFirstFunction(this.ref);
+        while (!fref.isNull()) {
+            yield new Function(fref);
+            fref = LLVM.LLVMGetNextFunction(fref);
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////
