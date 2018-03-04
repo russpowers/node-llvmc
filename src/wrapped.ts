@@ -86,7 +86,7 @@ export class Context extends Ref {
  */
 export class Module extends Ref implements Freeable {
     static create(name: String, ctx?: Context): Module {
-        let modref = ctx ? LLVM.LLVMModuleCreateWithNameInContext(name, ctx) : LLVM.LLVMModuleCreateWithName(name);
+        let modref = ctx ? LLVM.LLVMModuleCreateWithNameInContext(name, ctx.ref) : LLVM.LLVMModuleCreateWithName(name);
         let mod = new Module(modref);
 
         finalize(mod, function (this: Module) {
@@ -177,8 +177,8 @@ export class Type extends Ref { }
  * Void type
  */
 export class VoidType extends Type {
-    static create(): VoidType {
-        return new VoidType(LLVM.LLVMVoidType());
+    static create(ctx?: Context): VoidType {
+        return ctx ? new VoidType(LLVM.LLVMVoidTypeInContext(ctx)) : new VoidType(LLVM.LLVMVoidType());
     }
 }
 
@@ -189,43 +189,43 @@ export class IntType extends Type {
     /**
      * Get the i1 type.
      */
-    static createInt1(): IntType {
-        return new IntType(LLVM.LLVMInt1Type());
+    static createInt1(ctx?: Context): IntType {
+        return ctx ? new IntType(LLVM.LLVMInt1TypeInContext(ctx.ref)) : new IntType(LLVM.LLVMInt1Type());
     }
 
     /**
      * Get the i8 type.
      */
-    static createInt8(): IntType {
-        return new IntType(LLVM.LLVMInt8Type());
+    static createInt8(ctx?: Context): IntType {
+        return ctx ? new IntType(LLVM.LLVMInt8TypeInContext(ctx.ref)) : new IntType(LLVM.LLVMInt8Type());
     }
 
     /**
      * Get the i16 type.
      */
-    static createInt16(): IntType {
-        return new IntType(LLVM.LLVMInt16Type());
+    static createInt16(ctx?: Context): IntType {
+        return ctx ? new IntType(LLVM.LLVMInt16TypeInContext(ctx.ref)) : new IntType(LLVM.LLVMInt16Type());
     }
 
     /**
      * Get the i32 type.
      */
-    static createInt32(): IntType {
-        return new IntType(LLVM.LLVMInt32Type());
+    static createInt32(ctx?: Context): IntType {
+        return ctx ? new IntType(LLVM.LLVMInt32TypeInContext(ctx.ref)) : new IntType(LLVM.LLVMInt32Type());
     }
 
     /**
      * Get the i64 type.
      */
-    static createInt64(): IntType {
-        return new IntType(LLVM.LLVMInt64Type());
+    static createInt64(ctx?: Context): IntType {
+        return ctx ? new IntType(LLVM.LLVMInt64TypeInContext(ctx.ref)) : new IntType(LLVM.LLVMInt64Type());
     }
 
     /**
      * Get the i128 type.
      */
-    static createInt128(): IntType {
-        return new IntType(LLVM.LLVMInt128Type());
+    static createInt128(ctx?: Context): IntType {
+        return ctx ? new IntType(LLVM.LLVMInt128TypeInContext(ctx.ref)) : new IntType(LLVM.LLVMInt128Type());
     }
 }
 
@@ -236,15 +236,15 @@ export class FloatType extends Type {
     /**
      * Get a float type
      */
-    static createFloat(): FloatType {
-        return new FloatType(LLVM.LLVMFloatType());
+    static createFloat(ctx?: Context): FloatType {
+        return ctx ? new IntType(LLVM.LLVMFloatTypeInContext(ctx.ref)) : new IntType(LLVM.LLVMFloatType());
     }
 
     /**
      * Get a double type
      */
-    static createDouble(): FloatType {
-        return new FloatType(LLVM.LLVMDoubleType());
+    static createDouble(ctx?: Context): FloatType {
+        return ctx ? new IntType(LLVM.LLVMDoubleTypeInContext(ctx.ref)) : new IntType(LLVM.LLVMDoubleType());
     }
 }
 
@@ -377,8 +377,8 @@ export class Function extends Constant {
     /**
      * Add a new basic block to this function.
      */
-    appendBasicBlock(name: string): BasicBlock {
-        let bbref = LLVM.LLVMAppendBasicBlock(this.ref, name);
+    appendBasicBlock(name: string, ctx?: Context): BasicBlock {
+        let bbref = ctx ? LLVM.LLVMAppendBasicBlockInContext(this.ref, name, ctx.ref) : LLVM.LLVMAppendBasicBlock(this.ref, name);
         return new BasicBlock(bbref);
     }
 
@@ -556,7 +556,7 @@ export class BasicBlock extends Ref {
  */
 export class Builder extends Ref implements Freeable {
     static create(ctx?: Context): Builder {
-        let bref = ctx ? LLVM.LLVMCreateBuilderInContext(ctx) : LLVM.LLVMCreateBuilder();
+        let bref = ctx ? LLVM.LLVMCreateBuilderInContext(ctx.ref) : LLVM.LLVMCreateBuilder();
         const builder = new Builder(bref);
 
         finalize(builder, function (this: Builder) {
@@ -606,7 +606,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build function call
      */
-    buildCall(func: Value, args: Value[], name: string): Value {
+    createCall(func: Value, args: Value[], name: string = ""): Value {
         let vref = LLVM.LLVMBuildCall(this.ref, func.ref, genPtrArray(args), args.length, name);
         return new Value(vref);
     }
@@ -614,7 +614,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Create alloca
      */
-    buildAlloca(type: Type, name: string): Value {
+    createAlloca(type: Type, name: string = ""): Value {
         let vref = LLVM.LLVMBuildAlloca(this.ref, type.ref, name);
         return new Value(vref);
     }
@@ -622,7 +622,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Obtain value pointed to by ptr
      */
-    buildLoad(ptr: Value, name: string): Value {
+    createLoad(ptr: Value, name: string = ""): Value {
         let vref = LLVM.LLVMBuildLoad(this.ref, ptr.ref, name);
         return new Value(vref);
     }
@@ -630,7 +630,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Store value in ptr
      */
-    buildStore(value: Value, ptr: Value): Value {
+    createStore(value: Value, ptr: Value): Value {
         let vref = LLVM.LLVMBuildStore(this.ref, value.ref, ptr.ref);
         return new Value(vref);
     }
@@ -638,7 +638,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Generate element pointer for structs
      */
-    buildStructGEP(value: Value, idx: number, name: string): Value {
+    createStructGEP(value: Value, idx: number, name: string = ""): Value {
         let vref = LLVM.LLVMBuildStructGEP(this.ref, value.ref, idx, name);
         return new Value(vref);
     }
@@ -646,7 +646,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build cast of signed int to floating point
      */
-    buildSIToFP(val: Value, destType: Type, name: string): Value {
+    createSIToFP(val: Value, destType: Type, name: string = ""): Value {
         let vref = LLVM.LLVMBuildSIToFP(this.ref, val.ref, destType.ref, name);
         return new Value(vref);
     }
@@ -654,7 +654,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build cast of floating point to signed int
      */
-    buildFPToSI(val: Value, destType: Type, name: string): Value {
+    createFPToSI(val: Value, destType: Type, name: string = ""): Value {
         let vref = LLVM.LLVMBuildFPToSI(this.ref, val.ref, destType.ref, name);
         return new Value(vref);
     }
@@ -662,7 +662,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build bit cast
      */
-    buildBitCast(val: Value, destType: Type, name: string): Value {
+    createBitCast(val: Value, destType: Type, name: string = ""): Value {
         let vref = LLVM.LLVMBuildBitCast(this.ref, val.ref, destType.ref, name);
         return new Value(vref);
     }
@@ -670,80 +670,151 @@ export class Builder extends Ref implements Freeable {
     /**
      * Insert value into aggregate
      */
-    buildInsertValue(aggVal: Value, element: Value, idx: number, name: string): Value {
+    createInsertValue(aggVal: Value, element: Value, idx: number, name: string = ""): Value {
         let vref = LLVM.LLVMBuildInsertValue(this.ref, aggVal.ref, element.ref, idx, name);
         return new Value(vref);
     }
 
     /**
-     * Build an integer addition instruction.
+     * Build a logical and instruction.
      */
-    buildAdd(lhs: Value, rhs: Value, name: string): Value {
-        let vref = LLVM.LLVMBuildAdd(this.ref, lhs.ref, rhs.ref, name);
+    createNot(val: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildNot(this.ref, val.ref, name);
         return new Value(vref);
     }
 
     /**
-       * Build an floating point addition instruction.
-       */
-    buildFAdd(lhs: Value, rhs: Value, name: string): Value {
-        let vref = LLVM.LLVMBuildFAdd(this.ref, lhs.ref, rhs.ref, name);
+     * Build a logical and instruction.
+     */
+    createAnd(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildAnd(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
 
     /**
-     * Build an integer subtraction instruction
+     * Build a logical or instruction.
      */
-    buildSub(lhs: Value, rhs: Value, name: string): Value {
-        let vref = LLVM.LLVMBuildSub(this.ref, lhs.ref, rhs.ref, name);
+    createOr(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildOr(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
 
     /**
-     * Build a floating point subtraction instruction
+     * Build a logical or instruction.
      */
-    buildFSub(lhs: Value, rhs: Value, name: string): Value {
-        let vref = LLVM.LLVMBuildFSub(this.ref, lhs.ref, rhs.ref, name);
-        return new Value(vref);
-    }
-
-    /**
-     * Build an integer multiplication instruction
-     */
-    buildMul(lhs: Value, rhs: Value, name: string): Value {
-        let vref = LLVM.LLVMBuildMul(this.ref, lhs.ref, rhs.ref, name);
-        return new Value(vref);
-    }
-
-    /**
-     * Build a floating point multiplication instruction
-     */
-    buildFMul(lhs: Value, rhs: Value, name: string): Value {
-        let vref = LLVM.LLVMBuildFMul(this.ref, lhs.ref, rhs.ref, name);
+    createXor(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildXor(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
 
     /**
      * Negate integer
      */
-    buildNeg(val: Value, name: string): Value {
+    createNeg(val: Value, name: string = ""): Value {
         let vref = LLVM.LLVMBuildNeg(this.ref, val.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build an integer addition instruction.
+     */
+    createAdd(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildAdd(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build an integer subtraction instruction
+     */
+    createSub(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildSub(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build an integer multiplication instruction
+     */
+    createMul(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildMul(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build a signed integer division instruction
+     */
+    createSDiv(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildSDiv(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build a signed integer remainder instruction
+     */
+    createSRem(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildSRem(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
 
     /**
      * Negate floating point value
      */
-    buildFNeg(val: Value, name: string): Value {
+    createFNeg(val: Value, name: string = ""): Value {
         let vref = LLVM.LLVMBuildFNeg(this.ref, val.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build an floating point addition instruction.
+     */
+    createFAdd(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildFAdd(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build a floating point subtraction instruction
+     */
+    createFSub(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildFSub(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build a floating point multiplication instruction
+     */
+    createFMul(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildFMul(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build a floating point division instruction
+     */
+    createFDiv(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildFDiv(this.ref, lhs.ref, rhs.ref, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Build a floating point remainder instruction
+     */
+    createFRem(lhs: Value, rhs: Value, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildFRem(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
 
     /**
      * Build a return instruction.
      */
-    buildRet(arg: Value): Value {
+    createRet(arg: Value): Value {
         return LLVM.LLVMBuildRet(this.ref, arg.ref);
+    }
+
+    /**
+     * Build a return instruction.
+     */
+    createRetVoid(): Value {
+        return LLVM.LLVMBuildRetVoid(this.ref);
     }
 }
 
