@@ -47,11 +47,11 @@ export interface Freeable {
  */
 function genPtrArray(array: Ref[]) {
     let ptrArray = new PointerArray(array.length);
-    let i = 0;
-    for (let elem of array) {
+
+    for (let i = 0, end = array.length; i < end; ++i) {
         ptrArray[i] = array[i].ref;
-        ++i;
     }
+
     return ptrArray
 }
 
@@ -534,7 +534,7 @@ export class ConstArray extends ConstComposite {
 export class PhiNode extends Value {
     addIncoming(vals: Value[], bbs: BasicBlock[]): void {
         const count = Math.min(vals.length, bbs.length);
-        LLVM.LLVMAddIncoming(this.ref, vals.map((val) => val.ref), bbs.map((bb) => bb.ref), count);
+        LLVM.LLVMAddIncoming(this.ref, genPtrArray(vals), genPtrArray(bbs), count);
     }
 }
 
@@ -910,13 +910,38 @@ export class ModulePassManager extends Ref {
         return new ModulePassManager(mref);
     }
 
+    addArgumentPromotionPass(): this {
+        LLVM.LLVMAddArgumentPromotionPass(this.ref);
+        return this;
+    }
+
     addConstantMergePass(): this {
         LLVM.LLVMAddConstantMergePass(this.ref);
         return this;
     }
 
+    addCalledValuePropagationPass(): this {
+        LLVM.LLVMAddCalledValuePropagationPass(this.ref);
+        return this;
+    }
+
+    addDeadArgEliminationPass(): this {
+        LLVM.LLVMAddDeadArgEliminationPass(this.ref);
+        return this;
+    }
+
+    addFunctionAttrsPass(): this {
+        LLVM.LLVMAddFunctionAttrsPass(this.ref);
+        return this;
+    }
+
     addFunctionInliningPass(): this {
         LLVM.LLVMAddFunctionInliningPass(this.ref);
+        return this;
+    }
+
+    addAlwaysInlinerPass(): this {
+        LLVM.LLVMAddAlwaysInlinerPass(this.ref);
         return this;
     }
 
@@ -930,8 +955,33 @@ export class ModulePassManager extends Ref {
         return this;
     }
 
+    addIPConstantPropagationPass(): this {
+        LLVM.LLVMAddIPConstantPropagationPass(this.ref);
+        return this;
+    }
+
+    addPruneEHPass(): this {
+        LLVM.LLVMAddPruneEHPass(this.ref);
+        return this;
+    }
+
+    addIPSCCPPass(): this {
+        LLVM.LLVMAddIPSCCPPass(this.ref);
+        return this;
+    }
+
+    addInternalizePass(): this {
+        LLVM.LLVMAddInternalizePass(this.ref);
+        return this;
+    }
+
     addStripDeadPrototypesPass(): this {
         LLVM.LLVMAddStripDeadPrototypesPass(this.ref);
+        return this;
+    }
+
+    addStripSymbolsPass(): this {
+        LLVM.LLVMAddStripSymbolsPass(this.ref);
         return this;
     }
 
