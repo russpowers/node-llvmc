@@ -7,9 +7,10 @@
  * TypeScript class instead of an opaque pointer from the API.
  */
 
-import { LLVM } from './llvmc';
-import { PointerArray, voidp } from './types';
 import * as ref from 'ref';
+import { finalize } from './finalize';
+import { PointerArray, voidp } from './types';
+import { LLVM } from './llvmc';
 
 ////////////////////////////////////////////////////////
 // Base Types & Interfaces
@@ -19,10 +20,14 @@ import * as ref from 'ref';
  * A base class for our wrapper classes that abstract an `LLVM*Ref` type.
  */
 export abstract class Ref {
+    public ref: any;
+
     /**
-     * Create a new wrapepr for an underlying `LLVM*Ref` value.
+     * Create a new wrapper for an underlying `LLVM*Ref` value.
      */
-    constructor(public ref: any) {}
+    constructor(ref: any) {
+        this.ref = ref;
+    }
 }
 
 /**
@@ -82,7 +87,21 @@ export class Context extends Ref {
 export class Module extends Ref implements Freeable {
     static create(name: String): Module {
         let modref = LLVM.LLVMModuleCreateWithName(name);
-        return new Module(modref);
+        const mod = new Module(modref);
+
+        finalize(mod, function (this: Module) {
+            mod.free();
+        });
+
+        return mod;
+    }
+
+    /**
+     * Free the memory for this module.
+     */
+    free(): void {
+        LLVM.LLVMDisposeModule(this.ref);
+        this.ref = null;
     }
 
     /**
@@ -143,13 +162,6 @@ export class Module extends Ref implements Freeable {
 
         return func;
     }
-
-    /**
-     * Free the memory for this module.
-     */
-    free(): void {
-        LLVM.LLVMDisposeModule(this.ref);
-    }
 }
 
 //////////////////////////////////////////////////////////
@@ -177,42 +189,42 @@ export class IntType extends Type {
     /**
      * Get the i1 type.
      */
-    static int1(): IntType {
+    static createInt1(): IntType {
         return new IntType(LLVM.LLVMInt1Type());
     }
 
     /**
      * Get the i8 type.
      */
-    static int8(): IntType {
+    static createInt8(): IntType {
         return new IntType(LLVM.LLVMInt8Type());
     }
 
     /**
      * Get the i16 type.
      */
-    static int16(): IntType {
+    static createInt16(): IntType {
         return new IntType(LLVM.LLVMInt16Type());
     }
 
     /**
      * Get the i32 type.
      */
-    static int32(): IntType {
+    static createInt32(): IntType {
         return new IntType(LLVM.LLVMInt32Type());
     }
 
     /**
      * Get the i64 type.
      */
-    static int64(): IntType {
+    static createInt64(): IntType {
         return new IntType(LLVM.LLVMInt64Type());
     }
 
     /**
      * Get the i128 type.
      */
-    static int128(): IntType {
+    static createInt128(): IntType {
         return new IntType(LLVM.LLVMInt128Type());
     }
 }
@@ -224,14 +236,14 @@ export class FloatType extends Type {
     /**
      * Get a float type
      */
-    static float(): FloatType {
+    static createFloat(): FloatType {
         return new FloatType(LLVM.LLVMFloatType());
     }
 
     /**
      * Get a double type
      */
-    static double(): FloatType {
+    static createDouble(): FloatType {
         return new FloatType(LLVM.LLVMDoubleType());
     }
 }
@@ -366,7 +378,7 @@ export class Function extends Constant {
      * Add a new basic block to this function.
      */
     appendBasicBlock(name: string): BasicBlock {
-        let bbref = LLVM.LLVMAppendBasicBlock(this.ref, "entry");
+        let bbref = LLVM.LLVMAppendBasicBlock(this.ref, name);
         return new BasicBlock(bbref);
     }
 
@@ -535,7 +547,21 @@ export class BasicBlock extends Ref {
 export class Builder extends Ref implements Freeable {
     static create(): Builder {
         let bref = LLVM.LLVMCreateBuilder();
-        return new Builder(bref);
+        const builder = new Builder(bref);
+
+        finalize(builder, function (this: Builder) {
+            builder.free();
+        });
+
+        return builder;
+    }
+
+    /**
+     * Free the memory for this builder.
+     */
+    free(): void {
+        LLVM.LLVMDisposeBuilder(this.ref);
+        this.ref = null;
     }
 
     /**
@@ -616,6 +642,14 @@ export class Builder extends Ref implements Freeable {
     }
 
     /**
+     * Build cast of floating point to signed int
+     */
+    buildFPToSI(val: Value, destType: Type, name: string): Value {
+        let vref = LLVM.LLVMBuildFPToSI(this.ref, val.ref, destType.ref, name);
+        return new Value(vref);
+    }
+
+    /**
      * Build bit cast
      */
     buildBitCast(val: Value, destType: Type, name: string): Value {
@@ -634,7 +668,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build an integer addition instruction.
      */
-    add(lhs: Value, rhs: Value, name: string): Value {
+    buildAdd(lhs: Value, rhs: Value, name: string): Value {
         let vref = LLVM.LLVMBuildAdd(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
@@ -642,7 +676,7 @@ export class Builder extends Ref implements Freeable {
     /**
        * Build an floating point addition instruction.
        */
-    addf(lhs: Value, rhs: Value, name: string): Value {
+    buildFAdd(lhs: Value, rhs: Value, name: string): Value {
         let vref = LLVM.LLVMBuildFAdd(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
@@ -650,7 +684,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build an integer subtraction instruction
      */
-    sub(lhs: Value, rhs: Value, name: string): Value {
+    buildSub(lhs: Value, rhs: Value, name: string): Value {
         let vref = LLVM.LLVMBuildSub(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
@@ -658,7 +692,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build a floating point subtraction instruction
      */
-    subf(lhs: Value, rhs: Value, name: string): Value {
+    buildFSub(lhs: Value, rhs: Value, name: string): Value {
         let vref = LLVM.LLVMBuildFSub(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
@@ -666,7 +700,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build an integer multiplication instruction
      */
-    mul(lhs: Value, rhs: Value, name: string): Value {
+    buildMul(lhs: Value, rhs: Value, name: string): Value {
         let vref = LLVM.LLVMBuildMul(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
@@ -674,7 +708,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build a floating point multiplication instruction
      */
-    mulf(lhs: Value, rhs: Value, name: string): Value {
+    buildFMul(lhs: Value, rhs: Value, name: string): Value {
         let vref = LLVM.LLVMBuildFMul(this.ref, lhs.ref, rhs.ref, name);
         return new Value(vref);
     }
@@ -682,7 +716,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Negate integer
      */
-    neg(val: Value, name: string): Value {
+    buildNeg(val: Value, name: string): Value {
         let vref = LLVM.LLVMBuildNeg(this.ref, val.ref, name);
         return new Value(vref);
     }
@@ -690,7 +724,7 @@ export class Builder extends Ref implements Freeable {
     /**
      * Negate floating point value
      */
-    negf(val: Value, name: string): Value {
+    buildFNeg(val: Value, name: string): Value {
         let vref = LLVM.LLVMBuildFNeg(this.ref, val.ref, name);
         return new Value(vref);
     }
@@ -698,15 +732,8 @@ export class Builder extends Ref implements Freeable {
     /**
      * Build a return instruction.
      */
-    ret(arg: Value): Value {
+    buildRet(arg: Value): Value {
         return LLVM.LLVMBuildRet(this.ref, arg.ref);
-    }
-
-    /**
-     * Free the memory for this builder.
-     */
-    free(): void {
-        LLVM.LLVMDisposeBuilder(this.ref);
     }
 }
 

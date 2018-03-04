@@ -1,15 +1,15 @@
 {
     "compilerOptions": {
-        "strict": true,
-        "noImplicitReturns": true,
-
-        "target": "ES6",
+        "outDir": "build",
+        "target": "es2017",
         "module": "commonjs",
 
+        "strict": true,
+        "noImplicitReturns": true,
         "declaration": true,
-        "sourceMap": true,
-
-        "outDir": "build"
+        "sourceMap": true
     },
-    "include": ["lib/**/*"]
+    "include": [
+        "lib/**/*"
+    ]
 }
