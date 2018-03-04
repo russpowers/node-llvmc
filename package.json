@@ -3,25 +3,39 @@
   "description": "LLVM bindings via the C API",
   "version": "1.1.0",
   "license": "MIT",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "repository": "nullcatalyst/node-llvmc",
+  "contributors": [
+    {
+      "name": "Adrian Sampson",
+      "email": "adrian@radbox.org"
+    },
+    {
+      "name": "Richie Henwood",
+      "email": "rbh288@cornell.edu"
+    },
+    {
+      "name": "Scott Bennett",
+      "email": "scottbennett912@gmail.com"
+    }
+  ],
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "tsc"
   },
   "dependencies": {
+    "@types/ffi": "^0.0.19",
+    "@types/node": "^7.0.5",
+    "@types/ref": "^0.0.28",
+    "@types/ref-array": "^0.0.28",
+    "@types/weak": "^1.0.0",
     "ffi": "^2.2.0",
     "ref": "^1.3.4",
     "ref-array": "^1.2.0",
     "weak": "^1.0.1"
   },
   "devDependencies": {
-    "@types/ffi": "^0.0.19",
-    "@types/node": "^7.0.5",
-    "@types/ref": "^0.0.28",
-    "@types/ref-array": "^0.0.28",
-    "@types/weak": "^1.0.0",
     "typescript": "^2.4.1"
   },
   "engineStrict": true,

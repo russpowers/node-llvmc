@@ -3,7 +3,7 @@
 npm-debug.log
 
 # Targets
-/build
+/lib
 
 # Executables
 a.out

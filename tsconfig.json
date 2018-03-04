@@ -10,6 +10,6 @@
         "sourceMap": true
     },
     "include": [
-        "lib/**/*"
+        "src/**/*"
     ]
 }
