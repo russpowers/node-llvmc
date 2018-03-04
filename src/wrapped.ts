@@ -87,13 +87,15 @@ export class Context extends Ref {
 export class Module extends Ref implements Freeable {
     static create(name: String, ctx?: Context): Module {
         let modref = ctx ? LLVM.LLVMModuleCreateWithNameInContext(name, ctx.ref) : LLVM.LLVMModuleCreateWithName(name);
-        let mod = new Module(modref);
+        return new Module(modref);
+    }
 
-        finalize(mod, function (this: Module) {
-            mod.free();
+    private constructor(ref: any) {
+        super(ref);
+
+        finalize(this, function (this: Module) {
+            this.free();
         });
-
-        return mod;
     }
 
     /**
@@ -1107,9 +1109,11 @@ export class Target extends Ref {
     static getFromTriple(triple: string): Target {
         let error_ptr = ref.alloc('string');
         let target_ptr = ref.alloc(voidp);
+
         if (LLVM.LLVMGetTargetFromTriple(triple, target_ptr, error_ptr)) {
-            throw "error retrieving target";
+            throw new Error(ref.deref(error_ptr));
         }
+
         return new Target(ref.deref(target_ptr));
     }
 
@@ -1135,8 +1139,112 @@ export class Target extends Ref {
     }
 }
 
+///////////////////////////////////////////////////////
+// Execution Engines
+///////////////////////////////////////////////////////
+
+/**
+ * Wraps an LLVMExecutionEngineRef.
+ */
+export class ExecutionEngine extends Ref implements Freeable {
+    static create(mod: Module): ExecutionEngine {
+        const error_ptr = ref.alloc('string');
+        const ee_ptr = ref.alloc(voidp);
+
+        if (LLVM.LLVMCreateExecutionEngineForModule(ee_ptr, mod.ref, error_ptr)) {
+            throw new Error(ref.deref(error_ptr));
+        }
+
+        return new ExecutionEngine(ref.deref(ee_ptr));
+    }
+
+    private constructor(ref: any) {
+        super(ref);
+
+        finalize(this, function (this: ExecutionEngine) {
+            this.free();
+        });
+    }
+
+    /**
+     * Free the memory for this execution engine.
+     */
+    free(): void {
+        LLVM.LLVMDisposeExecutionEngine(this.ref);
+        this.ref = null;
+    }
+
+    run(func: Function, args: GenericValue[]): GenericValue {
+        return new GenericValue(LLVM.LLVMRunFunction(this.ref, func.ref, args.length, genPtrArray(args)));
+    }
+}
+
+
+/**
+ * Wraps an LLVMGenericValueRef.
+ */
+export class GenericValue extends Ref implements Freeable {
+    static createInt(type: Type, val: number, isSigned: boolean = true): GenericValue {
+        const vref = LLVM.LLVMCreateGenericValueOfInt(type.ref, val, isSigned);
+        return new GenericValue(vref);
+    }
+
+    static createFloat(type: Type, val: number): GenericValue {
+        const vref = LLVM.LLVMCreateGenericValueOfFloat(type.ref, val);
+        return new GenericValue(vref);
+    }
+
+    constructor(ref: any) {
+        super(ref);
+
+        finalize(this, function (this: GenericValue) {
+            this.free();
+        });
+    }
+
+    /**
+     * Free the memory for this execution engine.
+     */
+    free(): void {
+        LLVM.LLVMDisposeGenericValue(this.ref);
+        this.ref = null;
+    }
+
+    toBool(): boolean {
+        return LLVM.LLVMGenericValueToInt(this.ref, false) !== 0;
+    }
+
+    toInt(isSigned: boolean = true): number {
+        return LLVM.LLVMGenericValueToInt(this.ref, isSigned);
+    }
+
+    toFloat(type: Type): number {
+        return LLVM.LLVMGenericValueToFloat(type.ref, this.ref);
+    }
+}
+
+///////////////////////////////////////////////////////
+// Static Functions
+///////////////////////////////////////////////////////
+
+/**
+ * Deallocate and destroy all ManagedStatic variables.
+ */
+export function shutdown(): void {
+    LLVM.LLVMShutdown();
+}
+
+export function linkInInterpreter(): void {
+    LLVM.LLVMLinkInInterpreter();
+}
+
+export function linkInMCJIT(): void {
+    LLVM.LLVMLinkInMCJIT();
+}
+
 export function initX86Target(): void {
     LLVM.LLVMInitializeX86TargetInfo();
     LLVM.LLVMInitializeX86Target();
     LLVM.LLVMInitializeX86TargetMC();
 }
+
