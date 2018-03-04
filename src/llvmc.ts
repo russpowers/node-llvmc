@@ -135,7 +135,7 @@ export const LLVM = ffi.Library('libLLVM', {
     // Core
     // http://llvm.org/docs/doxygen/html/group__LLVMCCore.html
     'LLVMInitializeCore':                                   [void_, [voidp]],
-    'LLVMShutdown':                                         [void_, [void_]],
+    'LLVMShutdown':                                         [void_, []],
     'LLVMCreateMessage':                                    ['string', ['string']],
     'LLVMDisposeMessage':                                   [void_, ['string']],
 

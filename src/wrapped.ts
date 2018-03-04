@@ -1172,6 +1172,28 @@ export class ExecutionEngine extends Ref implements Freeable {
         return new ExecutionEngine(ref.deref(ee_ptr));
     }
 
+    static createInterpreter(mod: Module): ExecutionEngine {
+        const error_ptr = ref.alloc('string');
+        const ee_ptr = ref.alloc(voidp);
+
+        if (LLVM.LLVMCreateInterpreterForModule(ee_ptr, mod.ref, error_ptr)) {
+            throw new Error(ref.deref(error_ptr));
+        }
+
+        return new ExecutionEngine(ref.deref(ee_ptr));
+    }
+
+    static createJITCompiler(mod: Module): ExecutionEngine {
+        const error_ptr = ref.alloc('string');
+        const ee_ptr = ref.alloc(voidp);
+
+        if (LLVM.LLVMCreateJITCompilerForModule(ee_ptr, mod.ref, 2, error_ptr)) {
+            throw new Error(ref.deref(error_ptr));
+        }
+
+        return new ExecutionEngine(ref.deref(ee_ptr));
+    }
+
     private constructor(ref: any) {
         super(ref);
 
@@ -1192,7 +1214,6 @@ export class ExecutionEngine extends Ref implements Freeable {
         return new GenericValue(LLVM.LLVMRunFunction(this.ref, func.ref, args.length, genPtrArray(args)));
     }
 }
-
 
 /**
  * Wraps an LLVMGenericValueRef.
@@ -1217,7 +1238,7 @@ export class GenericValue extends Ref implements Freeable {
     }
 
     /**
-     * Free the memory for this execution engine.
+     * Free the memory for this generic value.
      */
     free(): void {
         LLVM.LLVMDisposeGenericValue(this.ref);
