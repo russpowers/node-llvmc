@@ -85,9 +85,9 @@ export class Context extends Ref {
  * Represents an LLVM module: specifically, and underlying `LLVMModuleRef`.
  */
 export class Module extends Ref implements Freeable {
-    static create(name: String): Module {
-        let modref = LLVM.LLVMModuleCreateWithName(name);
-        const mod = new Module(modref);
+    static create(name: String, ctx?: Context): Module {
+        let modref = ctx ? LLVM.LLVMModuleCreateWithNameInContext(name, ctx) : LLVM.LLVMModuleCreateWithName(name);
+        let mod = new Module(modref);
 
         finalize(mod, function (this: Module) {
             mod.free();
@@ -435,6 +435,16 @@ export class ConstInt extends ConstScalar {
         let vref = LLVM.LLVMConstInt(type.ref, value, false);
         return new ConstInt(vref);
     }
+
+    static createFalse(): ConstInt {
+        let vref = LLVM.LLVMConstInt(LLVM.LLVMInt1Type(), 0, false);
+        return new ConstInt(vref);
+    }
+
+    static createTrue(): ConstInt {
+        let vref = LLVM.LLVMConstInt(LLVM.LLVMInt1Type(), 1, false);
+        return new ConstInt(vref);
+    }
 }
 
 /**
@@ -545,8 +555,8 @@ export class BasicBlock extends Ref {
  * Represents an LLVM IR builder.
  */
 export class Builder extends Ref implements Freeable {
-    static create(): Builder {
-        let bref = LLVM.LLVMCreateBuilder();
+    static create(ctx?: Context): Builder {
+        let bref = ctx ? LLVM.LLVMCreateBuilderInContext(ctx) : LLVM.LLVMCreateBuilder();
         const builder = new Builder(bref);
 
         finalize(builder, function (this: Builder) {
