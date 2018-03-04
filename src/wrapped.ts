@@ -178,7 +178,7 @@ export class Type extends Ref { }
  */
 export class VoidType extends Type {
     static create(ctx?: Context): VoidType {
-        return ctx ? new VoidType(LLVM.LLVMVoidTypeInContext(ctx)) : new VoidType(LLVM.LLVMVoidType());
+        return ctx ? new VoidType(LLVM.LLVMVoidTypeInContext(ctx.ref)) : new VoidType(LLVM.LLVMVoidType());
     }
 }
 
@@ -378,7 +378,7 @@ export class Function extends Constant {
      * Add a new basic block to this function.
      */
     appendBasicBlock(name: string, ctx?: Context): BasicBlock {
-        let bbref = ctx ? LLVM.LLVMAppendBasicBlockInContext(this.ref, name, ctx.ref) : LLVM.LLVMAppendBasicBlock(this.ref, name);
+        let bbref = ctx ? LLVM.LLVMAppendBasicBlockInContext(ctx.ref, this.ref, name) : LLVM.LLVMAppendBasicBlock(this.ref, name);
         return new BasicBlock(bbref);
     }
 
@@ -523,7 +523,7 @@ export class ConstArray extends ConstComposite {
 export class PhiNode extends Value {
     addIncoming(vals: Value[], bbs: BasicBlock[]): void {
         const count = Math.min(vals.length, bbs.length);
-        LLVM.LLVMAddIncoming(this.ref, vals, bbs, count);
+        LLVM.LLVMAddIncoming(this.ref, vals.map((val) => val.ref), bbs.map((bb) => bb.ref), count);
     }
 }
 

@@ -187,7 +187,7 @@ export const LLVM = ffi.Library('libLLVM', {
     'LLVMGetTypeKind':                                      ['int', [voidp]],
     'LLVMTypeIsSized':                                      ['bool', [voidp]],
     'LLVMGetTypeContext':                                   [voidp, [voidp]],
-    'LLVMDumpType':                                         [void_, [voidp]],
+    // 'LLVMDumpType':                                         [void_, [voidp]],
     'LLVMPrintTypeToString':                                ['string', [voidp]],
 
     // Integer Types.
