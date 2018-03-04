@@ -23,5 +23,9 @@
     "@types/ref-array": "^0.0.28",
     "@types/weak": "^1.0.0",
     "typescript": "^2.4.1"
+  },
+  "engineStrict": true,
+  "engines": {
+    "node": "^8.0"
   }
 }
