@@ -21,8 +21,8 @@
     }
   ],
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "tsc"
+    "postinstall": "npm run build",
+    "build": "tsc -p ."
   },
   "dependencies": {
     "@types/ffi": "^0.0.19",
