@@ -853,6 +853,145 @@ export class Builder extends Ref implements Freeable {
 }
 
 ///////////////////////////////////////////////////////
+// Passes
+///////////////////////////////////////////////////////
+
+/**
+ * Wraps an LLVMPassRegistryRef.
+ */
+export class PassRegistry extends Ref {
+    static getGlobal(): PassRegistry {
+        const rref = LLVM.LLVMGetGlobalPassRegistry();
+        return new PassRegistry(rref);
+    }
+}
+
+/**
+ * Wraps an LLVMPassManagerRef.
+ */
+export class PassManager extends Ref implements Freeable {
+    constructor(ref: any) {
+        super(ref);
+
+        finalize(this, function (this: PassManager) {
+            this.free();
+        });
+    }
+
+    /**
+     * Free the memory for this pass manager.
+     */
+    free(): void {
+        LLVM.LLVMDisposePassManager(this.ref);
+        this.ref = null;
+    }
+}
+
+/**
+ * Wraps an LLVMPassManagerRef.
+ */
+export class ModulePassManager extends Ref {
+    /**
+     * Constructs a new whole-module pass pipeline.
+     */
+    static create(): ModulePassManager {
+        const mref = LLVM.LLVMCreatePassManager();
+        return new ModulePassManager(mref);
+    }
+
+    addConstantMergePass(): this {
+        LLVM.LLVMAddConstantMergePass(this.ref);
+        return this;
+    }
+
+    addFunctionInliningPass(): this {
+        LLVM.LLVMAddFunctionInliningPass(this.ref);
+        return this;
+    }
+
+    addGlobalDCEPass(): this {
+        LLVM.LLVMAddGlobalDCEPass(this.ref);
+        return this;
+    }
+
+    addGlobalOptimizerPass(): this {
+        LLVM.LLVMAddGlobalOptimizerPass(this.ref);
+        return this;
+    }
+
+    addStripDeadPrototypesPass(): this {
+        LLVM.LLVMAddStripDeadPrototypesPass(this.ref);
+        return this;
+    }
+
+    /**
+     * Initializes, executes on the provided module, and finalizes all of the passes scheduled in the pass manager.
+     * @param mod The module on which to run
+     */
+    run(mod: Module): boolean {
+        return LLVM.LLVMRunPassManager(this.ref, mod.ref);
+    }
+}
+
+
+/**
+ * Wraps an LLVMPassManagerRef.
+ */
+export class FunctionPassManager extends Ref {
+    static create(mod: Module): FunctionPassManager {
+        const mref = LLVM.LLVMCreateFunctionPassManagerForModule(mod.ref);
+        return new FunctionPassManager(mref);
+    }
+
+    addPromoteMemoryToRegisterPass(): this {
+        LLVM.LLVMAddPromoteMemoryToRegisterPass(this.ref);
+        return this;
+    }
+
+    addInstructionCombiningPass(): this {
+        LLVM.LLVMAddInstructionCombiningPass(this.ref);
+        return this;
+    }
+
+    addReassociatePass(): this {
+        LLVM.LLVMAddReassociatePass(this.ref);
+        return this;
+    }
+
+    addGVNPass(): this {
+        LLVM.LLVMAddGVNPass(this.ref);
+        return this;
+    }
+
+    addCFGSimplificationPass(): this {
+        LLVM.LLVMAddCFGSimplificationPass(this.ref);
+        return this;
+    }
+
+    /**
+     * Initializes all of the function passes scheduled in the function pass manager.
+     */
+    initialize(): boolean {
+        return LLVM.LLVMInitializeFunctionPassManager(this.ref);
+    }
+
+    /**
+     * Finalizes all of the function passes scheduled in in the function pass manager.
+     */
+    finalize(): boolean {
+        return LLVM.LLVMFinalizeFunctionPassManager(this.ref);
+    }
+
+    /**
+     * Executes all of the function passes scheduled in the function pass manager on the provided function.
+     * @param func The function on which to run
+     */
+    run(func: Function): boolean {
+        return LLVM.LLVMRunFunctionPassManager(this.ref, func.ref);
+    }
+}
+
+///////////////////////////////////////////////////////
 // Targets
 ///////////////////////////////////////////////////////
 
