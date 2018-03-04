@@ -1069,8 +1069,22 @@ export class TargetMachine extends Ref {
         features: string = "",
         opt_level: number = 2,
         reloc_mode: number = 0,
-        code_model: number = 0) {
+        code_model: number = 0
+    ) {
         let tmref = LLVM.LLVMCreateTargetMachine(target.ref, triple, cpu, features, opt_level, reloc_mode, code_model);
+        return new TargetMachine(tmref);
+    }
+
+    static createDefault(
+        cpu: string = "",
+        features: string = "",
+        opt_level: number = 2,
+        reloc_mode: number = 0,
+        code_model: number = 0
+    ) {
+        const target_triple = TargetMachine.getDefaultTargetTriple();
+        const target = Target.getFromTriple(target_triple);
+        const tmref = LLVM.LLVMCreateTargetMachine(target.ref, target_triple, cpu, features, opt_level, reloc_mode, code_model);
         return new TargetMachine(tmref);
     }
 
@@ -1242,9 +1256,16 @@ export function linkInMCJIT(): void {
     LLVM.LLVMLinkInMCJIT();
 }
 
+// export function initNativeTarget(): void {
+//     LLVM.LLVMInitializeNativeTarget();
+//     LLVM.LLVMInitializeNativeAsmPrinter();
+//     LLVM.LLVMInitializeNativeAsmParser();
+// }
+
 export function initX86Target(): void {
     LLVM.LLVMInitializeX86TargetInfo();
     LLVM.LLVMInitializeX86Target();
     LLVM.LLVMInitializeX86TargetMC();
+    LLVM.LLVMInitializeX86AsmPrinter();
+    LLVM.LLVMInitializeX86AsmParser();
 }
-

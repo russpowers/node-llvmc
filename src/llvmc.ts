@@ -905,4 +905,6 @@ export const LLVM = ffi.Library('libLLVM', {
     'LLVMInitializeX86TargetInfo':                          [void_, []],
     'LLVMInitializeX86Target':                              [void_, []],
     'LLVMInitializeX86TargetMC':                            [void_, []],
+    'LLVMInitializeX86AsmParser':                           [void_, []],
+    'LLVMInitializeX86AsmPrinter':                          [void_, []],
 });
