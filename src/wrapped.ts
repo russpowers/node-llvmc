@@ -517,6 +517,16 @@ export class ConstArray extends ConstComposite {
     }
 }
 
+/**
+ * PHI node
+ */
+export class PhiNode extends Value {
+    addIncoming(vals: Value[], bbs: BasicBlock[]): void {
+        const count = Math.min(vals.length, bbs.length);
+        LLVM.LLVMAddIncoming(this.ref, vals, bbs, count);
+    }
+}
+
 //////////////////////////////////////////////////////////
 // Basic Block
 //////////////////////////////////////////////////////////
@@ -609,6 +619,30 @@ export class Builder extends Ref implements Freeable {
     createCall(func: Value, args: Value[], name: string = ""): Value {
         let vref = LLVM.LLVMBuildCall(this.ref, func.ref, genPtrArray(args), args.length, name);
         return new Value(vref);
+    }
+
+    /**
+     * Create unconditional branch
+     */
+    createBr(bb: BasicBlock): Value {
+        let vref = LLVM.LLVMBuildBr(this.ref, bb.ref);
+        return new Value(vref);
+    }
+
+    /**
+     * Create conditional branch
+     */
+    createCondBr(val: Value, thenBlock: BasicBlock, elseBlock: BasicBlock): Value {
+        let vref = LLVM.LLVMBuildCondBr(this.ref, val.ref, thenBlock.ref, elseBlock.ref);
+        return new Value(vref);
+    }
+
+    /**
+     * Create phi node
+     */
+    createPhi(type: Type, name: string = ""): PhiNode {
+        let vref = LLVM.LLVMBuildPhi(this.ref, type.ref, name);
+        return new PhiNode(vref);
     }
 
     /**
