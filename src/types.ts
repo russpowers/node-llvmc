@@ -37,11 +37,11 @@ export const LLVMOpInfo1 = Struct({
 export const LLVMOpInfo1Ptr = ref.refType(LLVMOpInfo1);
 
 // http://llvm.org/docs/doxygen/html/structLLVMMCJITCompilerOptions.html
-export const LLVMCJITCompilerOptions = Struct({
+export const LLVMMCJITCompilerOptions = Struct({
     'OptLevel':             'uint',
     'CodeModel':            'int',
     'NoFramePointerElim':   'bool',
     'EnableFastISel':       'bool',
     'MCJMM':                voidp,
 });
-export const LLVMCJITCompilerOptionsPtr = ref.refType(LLVMCJITCompilerOptions);
+export const LLVMMCJITCompilerOptionsPtr = ref.refType(LLVMMCJITCompilerOptions);

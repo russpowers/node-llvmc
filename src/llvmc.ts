@@ -20,8 +20,10 @@ import {
 
     PointerArray,
 
-    LLVMCJITCompilerOptionsPtr,
+    LLVMMCJITCompilerOptionsPtr,
 } from './types';
+
+import { NativeTargetFFI } from './native';
 
 export const LLVM = ffi.Library('libLLVM', {
     // Analysis
@@ -714,8 +716,8 @@ export const LLVM = ffi.Library('libLLVM', {
     'LLVMCreateExecutionEngineForModule':                   ['bool', [voidpp, voidp, stringp]],
     'LLVMCreateInterpreterForModule':                       ['bool', [voidpp, voidp, stringp]],
     'LLVMCreateJITCompilerForModule':                       ['bool', [voidpp, voidp, 'uint', stringp]],
-    'LLVMInitializeMCJITCompilerOptions':                   [void_, [LLVMCJITCompilerOptionsPtr, 'size_t']],
-    'LLVMCreateMCJITCompilerForModule':                     ['bool', [voidpp, voidp, LLVMCJITCompilerOptionsPtr, 'size_t', stringp]],
+    'LLVMInitializeMCJITCompilerOptions':                   [void_, [LLVMMCJITCompilerOptionsPtr, 'size_t']],
+    'LLVMCreateMCJITCompilerForModule':                     ['bool', [voidpp, voidp, LLVMMCJITCompilerOptionsPtr, 'size_t', stringp]],
     'LLVMDisposeExecutionEngine':                           [void_, [voidp]],
     'LLVMRunStaticConstructors':                            [void_, [voidp]],
     'LLVMRunStaticDestructors':                             [void_, [voidp]],
@@ -901,10 +903,6 @@ export const LLVM = ffi.Library('libLLVM', {
     'LLVMAddAnalysisPasses':                                [void_, [voidp, voidp]],
     'LLVMCreateTargetDataLayout':                           [voidp, [voidp]],
 
-    // Init
-    'LLVMInitializeX86TargetInfo':                          [void_, []],
-    'LLVMInitializeX86Target':                              [void_, []],
-    'LLVMInitializeX86TargetMC':                            [void_, []],
-    'LLVMInitializeX86AsmParser':                           [void_, []],
-    'LLVMInitializeX86AsmPrinter':                          [void_, []],
+    // Init Native
+    ...NativeTargetFFI,
 });

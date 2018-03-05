@@ -10,6 +10,7 @@
 import * as ref from 'ref';
 import { PointerArray, voidp } from './types';
 import { LLVM } from './llvmc';
+import { NativeTargetFFI } from './native';
 
 ////////////////////////////////////////////////////////
 // Base Types & Interfaces
@@ -1446,16 +1447,8 @@ export function linkInMCJIT(): void {
     LLVM.LLVMLinkInMCJIT();
 }
 
-// export function initNativeTarget(): void {
-//     LLVM.LLVMInitializeNativeTarget();
-//     LLVM.LLVMInitializeNativeAsmPrinter();
-//     LLVM.LLVMInitializeNativeAsmParser();
-// }
-
-export function initX86Target(): void {
-    LLVM.LLVMInitializeX86TargetInfo();
-    LLVM.LLVMInitializeX86Target();
-    LLVM.LLVMInitializeX86TargetMC();
-    LLVM.LLVMInitializeX86AsmPrinter();
-    LLVM.LLVMInitializeX86AsmParser();
+export function initNativeTarget(): void {
+    for (let nativeFn in NativeTargetFFI) {
+        LLVM[nativeFn]();
+    }
 }
