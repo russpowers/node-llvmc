@@ -8,7 +8,6 @@
  */
 
 import * as ref from 'ref';
-import { finalize } from './finalize';
 import { PointerArray, voidp } from './types';
 import { LLVM } from './llvmc';
 
@@ -35,14 +34,6 @@ export abstract class Ref {
  * you're done with the memory.
  */
 export abstract class Freeable extends Ref {
-    constructor(ref: any) {
-        super(ref);
-
-        finalize(this, function (this: Freeable) {
-            this.free();
-        });
-    }
-
     abstract free(): void;
 }
 
@@ -60,7 +51,7 @@ function genPtrArray(array: Ref[]) {
         ptrArray[i] = array[i].ref;
     }
 
-    return ptrArray
+    return ptrArray;
 }
 
 //////////////////////////////////////////////////////////
@@ -1147,6 +1138,8 @@ export class Target extends Ref {
  * Wraps an LLVMExecutionEngineRef.
  */
 export class ExecutionEngine extends Freeable {
+    public mods: Module[];
+
     static create(mod: Module): ExecutionEngine {
         const error_ptr = ref.alloc('string');
         const ee_ptr = ref.alloc(voidp);
@@ -1180,12 +1173,45 @@ export class ExecutionEngine extends Freeable {
         return new ExecutionEngine(ref.deref(ee_ptr));
     }
 
+    constructor(ref: any) {
+        super(ref);
+
+        this.mods = [];
+    }
+
     /**
      * Free the memory for this execution engine.
      */
     free(): void {
+        // Detach all modules from the execution engine
+        // Any modules that are attached to an execution engine are normally freed with the engine
+        // So detach the modules so we can continue using them after
+        const error_ptr = ref.alloc('string');
+        for (let mod of this.mods) {
+            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, null, error_ptr)) {
+                throw new Error(ref.deref(error_ptr));
+            }
+        }
+
         LLVM.LLVMDisposeExecutionEngine(this.ref);
         this.ref = null;
+    }
+
+    addModule(mod: Module): void {
+        this.mods.push(mod);
+        LLVM.LLVMAddModule(this.ref, mod.ref);
+    }
+
+    removeModule(mod: Module): void {
+        const index = this.mods.indexOf(mod);
+        if (index >= 0) {
+            this.mods.splice(index, 1);
+
+            const error_ptr = ref.alloc('string');
+            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, null, error_ptr)) {
+                throw new Error(ref.deref(error_ptr));
+            }
+        }
     }
 
     run(func: Function, args: GenericValue[]): GenericValue {
