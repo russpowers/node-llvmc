@@ -880,7 +880,7 @@ export class PassManager extends Freeable {
 /**
  * Wraps an LLVMPassManagerRef.
  */
-export class ModulePassManager extends Ref {
+export class ModulePassManager extends PassManager {
     /**
      * Constructs a new whole-module pass pipeline.
      */
@@ -977,24 +977,44 @@ export class ModulePassManager extends Ref {
 /**
  * Wraps an LLVMPassManagerRef.
  */
-export class FunctionPassManager extends Ref {
+export class FunctionPassManager extends PassManager {
     static create(mod: Module): FunctionPassManager {
         const mref = LLVM.LLVMCreateFunctionPassManagerForModule(mod.ref);
         return new FunctionPassManager(mref);
     }
 
-    addPromoteMemoryToRegisterPass(): this {
-        LLVM.LLVMAddPromoteMemoryToRegisterPass(this.ref);
+    addAggressiveDCEPass(): this {
+        LLVM.LLVMAddAggressiveDCEPass(this.ref);
         return this;
     }
 
-    addInstructionCombiningPass(): this {
-        LLVM.LLVMAddInstructionCombiningPass(this.ref);
+    addBitTrackingDCEPass(): this {
+        LLVM.LLVMAddBitTrackingDCEPass(this.ref);
         return this;
     }
 
-    addReassociatePass(): this {
-        LLVM.LLVMAddReassociatePass(this.ref);
+    addAlignmentFromAssumptionsPass(): this {
+        LLVM.LLVMAddAlignmentFromAssumptionsPass(this.ref);
+        return this;
+    }
+
+    addCFGSimplificationPass(): this {
+        LLVM.LLVMAddCFGSimplificationPass(this.ref);
+        return this;
+    }
+
+    addDeadStoreEliminationPass(): this {
+        LLVM.LLVMAddDeadStoreEliminationPass(this.ref);
+        return this;
+    }
+
+    addScalarizerPass(): this {
+        LLVM.LLVMAddScalarizerPass(this.ref);
+        return this;
+    }
+
+    addMergedLoadStoreMotionPass(): this {
+        LLVM.LLVMAddMergedLoadStoreMotionPass(this.ref);
         return this;
     }
 
@@ -1003,8 +1023,163 @@ export class FunctionPassManager extends Ref {
         return this;
     }
 
-    addCFGSimplificationPass(): this {
-        LLVM.LLVMAddCFGSimplificationPass(this.ref);
+    addNewGVNPass(): this {
+        LLVM.LLVMAddNewGVNPass(this.ref);
+        return this;
+    }
+
+    addIndVarSimplifyPass(): this {
+        LLVM.LLVMIndVarSimplifyPass(this.ref);
+        return this;
+    }
+
+    addInstructionCombiningPass(): this {
+        LLVM.LLVMAddInstructionCombiningPass(this.ref);
+        return this;
+    }
+
+    addJumpThreadingPass(): this {
+        LLVM.LLVMAddJumpThreadingPass(this.ref);
+        return this;
+    }
+
+    addLICMPass(): this {
+        LLVM.LLVMAddLICMPass(this.ref);
+        return this;
+    }
+
+    addLoopDeletionPass(): this {
+        LLVM.LLVMAddLoopDeletionPass(this.ref);
+        return this;
+    }
+
+    addLoopIdiomPass(): this {
+        LLVM.LLVMAddLoopIdiomPass(this.ref);
+        return this;
+    }
+
+    addLoopRotatePass(): this {
+        LLVM.LLVMAddLoopRotatePass(this.ref);
+        return this;
+    }
+
+    addLoopRerollPass(): this {
+        LLVM.LLVMAddLoopRerollPass(this.ref);
+        return this;
+    }
+
+    addLoopUnrollPass(): this {
+        LLVM.LLVMAddLoopUnrollPass(this.ref);
+        return this;
+    }
+
+    addLoopUnswitchPass(): this {
+        LLVM.LLVMAddLoopUnswitchPass(this.ref);
+        return this;
+    }
+
+    addMemCpyOptPass(): this {
+        LLVM.LLVMAddMemCpyOptPass(this.ref);
+        return this;
+    }
+
+    addPartiallyInlineLibCallsPass(): this {
+        LLVM.LLVMAddPartiallyInlineLibCallsPass(this.ref);
+        return this;
+    }
+
+    addLowerSwitchPass(): this {
+        LLVM.LLVMAddLowerSwitchPass(this.ref);
+        return this;
+    }
+
+    addPromoteMemoryToRegisterPass(): this {
+        LLVM.LLVMAddPromoteMemoryToRegisterPass(this.ref);
+        return this;
+    }
+
+    addReassociatePass(): this {
+        LLVM.LLVMAddReassociatePass(this.ref);
+        return this;
+    }
+
+    addSCCPPass(): this {
+        LLVM.LLVMAddSCCPPass(this.ref);
+        return this;
+    }
+
+    addScalarReplAggregatesPass(): this {
+        LLVM.LLVMAddScalarReplAggregatesPass(this.ref);
+        return this;
+    }
+
+    addScalarReplAggregatesPassSSA(): this {
+        LLVM.LLVMAddScalarReplAggregatesPassSSA(this.ref);
+        return this;
+    }
+
+    addScalarReplAggregatesPassWithThreshold(): this {
+        LLVM.LLVMAddScalarReplAggregatesPassWithThreshold(this.ref);
+        return this;
+    }
+
+    addSimplifyLibCallsPass(): this {
+        LLVM.LLVMAddSimplifyLibCallsPass(this.ref);
+        return this;
+    }
+
+    addTailCallEliminationPass(): this {
+        LLVM.LLVMAddTailCallEliminationPass(this.ref);
+        return this;
+    }
+
+    addConstantPropagationPass(): this {
+        LLVM.LLVMAddConstantPropagationPass(this.ref);
+        return this;
+    }
+
+    addDemoteMemoryToRegisterPass(): this {
+        LLVM.LLVMAddDemoteMemoryToRegisterPass(this.ref);
+        return this;
+    }
+
+    addVerifierPass(): this {
+        LLVM.LLVMAddVerifierPass(this.ref);
+        return this;
+    }
+
+    addCorrelatedValuePropagationPass(): this {
+        LLVM.LLVMAddCorrelatedValuePropagationPass(this.ref);
+        return this;
+    }
+
+    addEarlyCSEPass(): this {
+        LLVM.LLVMAddEarlyCSEPass(this.ref);
+        return this;
+    }
+
+    addEarlyCSEMemSSAPass(): this {
+        LLVM.LLVMAddEarlyCSEMemSSAPass(this.ref);
+        return this;
+    }
+
+    addLowerExpectIntrinsicPass(): this {
+        LLVM.LLVMAddLowerExpectIntrinsicPass(this.ref);
+        return this;
+    }
+
+    addTypeBasedAliasAnalysisPass(): this {
+        LLVM.LLVMAddTypeBasedAliasAnalysisPass(this.ref);
+        return this;
+    }
+
+    addScopedNoAliasAAPass(): this {
+        LLVM.LLVMAddScopedNoAliasAAPass(this.ref);
+        return this;
+    }
+
+    addBasicAliasAnalysisPass(): this {
+        LLVM.LLVMAddBasicAliasAnalysisPass(this.ref);
         return this;
     }
 
