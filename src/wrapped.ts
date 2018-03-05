@@ -1413,6 +1413,17 @@ export class ExecutionEngine extends Freeable {
  * Wraps an LLVMGenericValueRef.
  */
 export class GenericValue extends Freeable {
+    /**
+     * Using this generic value as a string requires allocating the cstring in a buffer
+     * We must store a reference to that buffer to keep it from being deallocated
+     */
+    private buf: Buffer | null;
+
+    static createBool(type: Type, val: boolean): GenericValue {
+        const vref = LLVM.LLVMCreateGenericValueOfInt(type.ref, val ? 1 : 0, false);
+        return new GenericValue(vref);
+    }
+
     static createInt(type: Type, val: number, isSigned: boolean = true): GenericValue {
         const vref = LLVM.LLVMCreateGenericValueOfInt(type.ref, val, isSigned);
         return new GenericValue(vref);
@@ -1423,12 +1434,25 @@ export class GenericValue extends Freeable {
         return new GenericValue(vref);
     }
 
+    static createString(val: string): GenericValue {
+        const ptr = ref.allocCString(val);
+        const vref = LLVM.LLVMCreateGenericValueOfPointer(ptr);
+        return new GenericValue(vref, ptr);
+    }
+
+    constructor(ref: any, buf?: Buffer) {
+        super(ref);
+
+        this.buf = buf || null;
+    }
+
     /**
      * Free the memory for this generic value.
      */
     free(): void {
         LLVM.LLVMDisposeGenericValue(this.ref);
         this.ref = null;
+        this.buf = null;
     }
 
     toBool(): boolean {
@@ -1441,6 +1465,15 @@ export class GenericValue extends Freeable {
 
     toFloat(type: Type): number {
         return LLVM.LLVMGenericValueToFloat(type.ref, this.ref);
+    }
+
+    toString(): string | null {
+        const ptr = LLVM.LLVMGenericValueToPointer(this.ref);
+        if (ref.isNull(ptr)) {
+            return null;
+        } else {
+            return ref.readCString(ptr);
+        }
     }
 }
 
