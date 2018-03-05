@@ -471,18 +471,12 @@ export class ConstComposite extends Constant { }
  */
 export class ConstString extends ConstComposite {
     /**
-     * Create a ConstantDataSequential with string content in the provided context
+     * Create a ConstantDataSequential with string content in given context, or in the global context if none given
      */
-    static createInContext(context: Context, value: string, dontNullTerminate: boolean): ConstString {
-        let vref = LLVM.LLVMConstStringInContext(context.ref, value, value.length, dontNullTerminate);
-        return new ConstString(vref);
-    }
-
-    /**
-     * Create a ConstantDataSequential with string content in the global context
-     */
-    static create(value: string, dontNullTerminate: boolean): ConstString {
-        let vref = LLVM.LLVMConstString(value, value.length, dontNullTerminate);
+    static create(value: string, dontNullTerminate: boolean, ctx?: Context): ConstString {
+        let vref = ctx
+            ? LLVM.LLVMConstStringInContext(ctx.ref, value, value.length, dontNullTerminate)
+            : LLVM.LLVMConstString(value, value.length, dontNullTerminate);
         return new ConstString(vref);
     }
 }
@@ -494,9 +488,11 @@ export class ConstStruct extends ConstComposite {
     /**
      * Create a ConstantStruct in the global Context.
      */
-    static create(vals: Value[], packed: boolean): ConstStruct {
+    static create(vals: Value[], packed: boolean, ctx?: Context): ConstStruct {
         let _vals = genPtrArray(vals);
-        let sref = LLVM.LLVMConstStruct(_vals, vals.length, packed);
+        let sref = ctx
+            ? LLVM.LLVMConstStructInContext(ctx.ref, _vals, vals.length, packed)
+            : LLVM.LLVMConstStruct(_vals, vals.length, packed);
         return new ConstStruct(sref);
     }
 
