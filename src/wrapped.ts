@@ -60,7 +60,7 @@ function genPtrArray(array: Ref[]) {
         ptrArray[i] = array[i].ref;
     }
 
-    return ptrArray
+    return ptrArray;
 }
 
 //////////////////////////////////////////////////////////
@@ -1322,6 +1322,8 @@ export class Target extends Ref {
  * Wraps an LLVMExecutionEngineRef.
  */
 export class ExecutionEngine extends Freeable {
+    public mods: Module[];
+
     static create(mod: Module): ExecutionEngine {
         const error_ptr = ref.alloc('string');
         const ee_ptr = ref.alloc(voidp);
@@ -1330,7 +1332,7 @@ export class ExecutionEngine extends Freeable {
             throw new Error(ref.deref(error_ptr));
         }
 
-        return new ExecutionEngine(ref.deref(ee_ptr));
+        return new ExecutionEngine(ref.deref(ee_ptr), mod);
     }
 
     static createInterpreter(mod: Module): ExecutionEngine {
@@ -1341,7 +1343,7 @@ export class ExecutionEngine extends Freeable {
             throw new Error(ref.deref(error_ptr));
         }
 
-        return new ExecutionEngine(ref.deref(ee_ptr));
+        return new ExecutionEngine(ref.deref(ee_ptr), mod);
     }
 
     static createJITCompiler(mod: Module): ExecutionEngine {
@@ -1352,15 +1354,50 @@ export class ExecutionEngine extends Freeable {
             throw new Error(ref.deref(error_ptr));
         }
 
-        return new ExecutionEngine(ref.deref(ee_ptr));
+        return new ExecutionEngine(ref.deref(ee_ptr), mod);
+    }
+
+    constructor(ref: any, mod: Module) {
+        super(ref);
+
+        this.mods = [mod];
     }
 
     /**
      * Free the memory for this execution engine.
      */
     free(): void {
+        // Detach all modules from the execution engine
+        // Any modules that are attached to an execution engine are normally freed with the engine
+        // So detach the modules so we can continue using them after
+        const error_ptr = ref.alloc('string');
+        const mod_ptr = ref.alloc(voidp);
+        for (let mod of this.mods) {
+            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, mod_ptr, error_ptr)) {
+                throw new Error(ref.deref(error_ptr));
+            }
+        }
+
         LLVM.LLVMDisposeExecutionEngine(this.ref);
         this.ref = null;
+    }
+
+    addModule(mod: Module): void {
+        this.mods.push(mod);
+        LLVM.LLVMAddModule(this.ref, mod.ref);
+    }
+
+    removeModule(mod: Module): void {
+        const index = this.mods.indexOf(mod);
+        if (index >= 0) {
+            this.mods.splice(index, 1);
+
+            const error_ptr = ref.alloc('string');
+            const mod_ptr = ref.alloc(voidp);
+            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, mod_ptr, error_ptr)) {
+                throw new Error(ref.deref(error_ptr));
+            }
+        }
     }
 
     run(func: Function, args: GenericValue[]): GenericValue {
