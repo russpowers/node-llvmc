@@ -1323,7 +1323,7 @@ export class ExecutionEngine extends Freeable {
             throw new Error(ref.deref(error_ptr));
         }
 
-        return new ExecutionEngine(ref.deref(ee_ptr));
+        return new ExecutionEngine(ref.deref(ee_ptr), mod);
     }
 
     static createInterpreter(mod: Module): ExecutionEngine {
@@ -1334,7 +1334,7 @@ export class ExecutionEngine extends Freeable {
             throw new Error(ref.deref(error_ptr));
         }
 
-        return new ExecutionEngine(ref.deref(ee_ptr));
+        return new ExecutionEngine(ref.deref(ee_ptr), mod);
     }
 
     static createJITCompiler(mod: Module): ExecutionEngine {
@@ -1345,13 +1345,13 @@ export class ExecutionEngine extends Freeable {
             throw new Error(ref.deref(error_ptr));
         }
 
-        return new ExecutionEngine(ref.deref(ee_ptr));
+        return new ExecutionEngine(ref.deref(ee_ptr), mod);
     }
 
-    constructor(ref: any) {
+    constructor(ref: any, mod: Module) {
         super(ref);
 
-        this.mods = [];
+        this.mods = [mod];
     }
 
     /**
@@ -1362,8 +1362,9 @@ export class ExecutionEngine extends Freeable {
         // Any modules that are attached to an execution engine are normally freed with the engine
         // So detach the modules so we can continue using them after
         const error_ptr = ref.alloc('string');
+        const mod_ptr = ref.alloc(voidp);
         for (let mod of this.mods) {
-            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, null, error_ptr)) {
+            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, mod_ptr, error_ptr)) {
                 throw new Error(ref.deref(error_ptr));
             }
         }
@@ -1383,7 +1384,8 @@ export class ExecutionEngine extends Freeable {
             this.mods.splice(index, 1);
 
             const error_ptr = ref.alloc('string');
-            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, null, error_ptr)) {
+            const mod_ptr = ref.alloc(voidp);
+            if (LLVM.LLVMRemoveModule(this.ref, mod.ref, mod_ptr, error_ptr)) {
                 throw new Error(ref.deref(error_ptr));
             }
         }
