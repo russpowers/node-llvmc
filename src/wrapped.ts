@@ -673,6 +673,22 @@ export class Builder extends Freeable {
     }
 
     /**
+     * Generate global string
+     */
+    createGlobalString(value: string, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildGlobalString(this.ref, value, name);
+        return new Value(vref);
+    }
+
+    /**
+     * Generate global string pointer
+     */
+    createGlobalStringPtr(value: string, name: string = ""): Value {
+        let vref = LLVM.LLVMBuildGlobalStringPtr(this.ref, value, name);
+        return new Value(vref);
+    }
+
+    /**
      * Build cast of signed int to floating point
      */
     createSIToFP(val: Value, destType: Type, name: string = ""): Value {
