@@ -686,9 +686,9 @@ export const LLVM = ffi.Library('libLLVM', {
 
     // Threading
     // http://llvm.org/docs/doxygen/html/group__LLVMCCoreThreading.html
-    'LLVMStartMultithreaded':                               ['bool', []],
-    'LLVMStopMultithreaded':                                [void_, []],
     'LLVMIsMultithreaded':                                  ['bool', []],
+    // 'LLVMStartMultithreaded':                               ['bool', []], // Deprecated
+    // 'LLVMStopMultithreaded':                                [void_, []],  // Deprecated
 
     // Disassembler
     // http://llvm.org/docs/doxygen/html/group__LLVMCDisassembler.html
@@ -743,7 +743,7 @@ export const LLVM = ffi.Library('libLLVM', {
     'LLVMInitializeScalarOpts':                             [void_, [voidp]],
     'LLVMInitializeObjCARCOpts':                            [void_, [voidp]],
     'LLVMInitializeVectorization':                          [void_, [voidp]],
-    'LLVMInitializeInstCombine':                            [void_, [voidp]],
+    // 'LLVMInitializeInstCombine':                            [void_, [voidp]], // Not available in LLVM v6.0.0
     'LLVMInitializeIPO':                                    [void_, [voidp]],
     'LLVMInitializeInstrumentation':                        [void_, [voidp]],
     'LLVMInitializeAnalysis':                               [void_, [voidp]],
