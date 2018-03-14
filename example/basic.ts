@@ -23,7 +23,7 @@ mod.setDataLayout(data_layout_s);
 
 // Add a function to the module.
 let paramtypes = new Buffer(0);
-let functype = llvmc.FunctionType.create(llvmc.IntType.int32(), []);
+let functype = llvmc.FunctionType.create(llvmc.IntType.createInt32(), []);
 let main = mod.addFunction("main", functype);
 
 // Add a single basic block to the function.
@@ -32,10 +32,10 @@ let entry = main.appendBasicBlock("entry");
 // Build a tiny program in the block.
 let builder = llvmc.Builder.create();
 builder.positionAtEnd(entry);
-let arg1 = llvmc.ConstInt.create(34, llvmc.IntType.int32());
-let arg2 = llvmc.ConstInt.create(8, llvmc.IntType.int32());
-let sum = builder.add(arg1, arg2, "sum");
-builder.ret(sum);
+let arg1 = llvmc.ConstInt.create(34, llvmc.IntType.createInt32());
+let arg2 = llvmc.ConstInt.create(8, llvmc.IntType.createInt32());
+let sum = builder.createAdd(arg1, arg2, "sum");
+builder.createRet(sum);
 builder.free();
 
 // Dump the IR as bitcode to disk.

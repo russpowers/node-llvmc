@@ -26,7 +26,7 @@ export class Parser {
    * token the parser is looking at.  getNextToken reads another token from the
    * lexer and updates CurTok with its results.
    */
-  curTok: lexer.Token;
+  curTok: lexer.Token = new lexer.Tok_Eof();
   getNextToken(): lexer.Token {
     this.curTok = this.lex.getTok();
     return this.curTok;

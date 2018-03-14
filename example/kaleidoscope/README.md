@@ -10,7 +10,7 @@ Usage
 
 Compile the examples by running `tsc` in the `examples` directory. Then, type:
 
-    $ node build/example/kaleidoscope/calculator.js
+    $ node ../build/kaleidoscope/calculator.js
 
 to run the calculator. The program will prompt you to enter programs. The calculator supports supports arithmetic operations, function definitions, function calls, and externs. There are some example programs below.
 

@@ -74,13 +74,13 @@ function isDigit(str: string): boolean {
  * The lexer state itself.
  */
 export class Lexer {
-  prog: string;  // program to run
+  prog: string = '';  // program to run
   lastChar: string = ' ';  // contains last char read (' ' to start)
   idx: number = 0;  // where we are in program
   EOF: string = '';
 
-  numVal: number;  // filled with last number seen
-  idStr: string;  // filled with last variable id seen
+  numVal: number = 0;  // filled with last number seen
+  idStr: string = '';  // filled with last variable id seen
 
   /**
    * Reset the lexer to read a new program.

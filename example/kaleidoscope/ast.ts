@@ -42,7 +42,7 @@ export class NumberExprAST implements ExprAST {
   public constructor(val: number) {this.val = val;}
 
   public codegen(context: Context) : llvmc.Value {
-    return llvmc.ConstFloat.create(this.val, llvmc.FloatType.float());
+    return llvmc.ConstFloat.create(this.val, llvmc.FloatType.createFloat());
   }
 };
 
@@ -70,11 +70,11 @@ export class BinaryExprAST implements ExprAST {
 
     switch (this.op) {
       case '+':
-        return context.builder.addf(lVal, rVal, 'addtmp');
+        return context.builder.createFAdd(lVal, rVal, 'addtmp');
       case '-':
-        return context.builder.subf(lVal, rVal, 'subtmp');
+        return context.builder.createFSub(lVal, rVal, 'subtmp');
         case '*':
-        return context.builder.mulf(lVal, rVal, 'multmp');
+        return context.builder.createFMul(lVal, rVal, 'multmp');
         default:
         throw "invalid binary operator";
     }
@@ -111,7 +111,7 @@ export class CallExprAST implements ExprAST {
         throw "null exception"
       }
 
-      return context.builder.buildCall(calleeFunc, argsV, "calltmp");
+      return context.builder.createCall(calleeFunc, argsV, "calltmp");
   }
 };
 
@@ -134,8 +134,8 @@ export class PrototypeAST implements ASTNode {
     // Make the function type:  double(double,double) etc.
     let floats: llvmc.Type[] = [];
     for (let i = 0; i < this.args.length; i++)
-      floats.push(llvmc.FloatType.float());
-      let ft: llvmc.FunctionType = llvmc.FunctionType.create(llvmc.FloatType.float(), floats, false);
+      floats.push(llvmc.FloatType.createFloat());
+      let ft: llvmc.FunctionType = llvmc.FunctionType.create(llvmc.FloatType.createFloat(), floats, false);
 
       let func: llvmc.Function = context.mod.addFunction(this.name, ft);
 
@@ -185,7 +185,7 @@ export class FunctionAST implements ASTNode {
       let retVal: llvmc.Value = this.body.codegen(context);
       if (!retVal.ref.isNull()) {
       // Finish off the function.
-      context.builder.ret(retVal);
+      context.builder.createRet(retVal);
       return func;
       }
 
