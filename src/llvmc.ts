@@ -130,7 +130,6 @@ export const LLVM = ffi.Library('libLLVM', {
 
     // Vectorization transformation
     // http://llvm.org/docs/doxygen/html/group__LLVMCTransformsVectorize.html
-    'LLVMAddBBVectorizePass':                               [void_, [voidp]],
     'LLVMAddLoopVectorizePass':                             [void_, [voidp]],
     'LLVMAddSLPVectorizePass':                              [void_, [voidp]],
 
